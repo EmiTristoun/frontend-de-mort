@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function FilmPage({ id }) {
@@ -17,7 +17,7 @@ function FilmPage({ id }) {
   const [userNames, setUserNames] = useState({});
   const navigate = useNavigate();
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const response = await fetch(`https://backend-absolute-cinema.onrender.com/review/*?film_id=${id}`);
       if (!response.ok) {
@@ -55,7 +55,7 @@ function FilmPage({ id }) {
     } catch (err) {
       setError(err.message);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     async function fetchFilm() {
@@ -87,7 +87,7 @@ function FilmPage({ id }) {
 
     fetchFilm();
     fetchReviews();
-  }, [id]);
+  }, [id, fetchReviews]);
 
   const handleAddToList = async (e) => {
     e.preventDefault();
