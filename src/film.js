@@ -41,19 +41,26 @@ function FilmPage({ id }) {
         setReviews(data);
 
         const uniqueUserIds = [...new Set(data.map(r => r.user_id))];
-        const names = {};
-        await Promise.all(uniqueUserIds.map(async (userId) => {
-          if (!userNames[userId]) {
-            try {
-              const res = await fetch(`https://backend-absolute-cinema.onrender.com/user/${userId}`);
-              if (res.ok) {
-                const userData = await res.json();
-                names[userId] = userData.name;
-              }
-            } catch {}
-          }
-        }));
-        setUserNames(prev => ({ ...prev, ...names }));
+        // Use a functional update to always get the latest userNames
+        setUserNames(prev => {
+          const names = {};
+          const fetches = uniqueUserIds.map(async (userId) => {
+            if (!prev[userId]) {
+              try {
+                const res = await fetch(`https://backend-absolute-cinema.onrender.com/user/${userId}`);
+                if (res.ok) {
+                  const userData = await res.json();
+                  names[userId] = userData.name;
+                }
+              } catch {}
+            }
+          });
+          // Wait for all fetches to complete before returning the new state
+          Promise.all(fetches).then(() => {
+            setUserNames(current => ({ ...current, ...names }));
+          });
+          return prev;
+        });
 
         if (data.length > 0) {
           const totalRating = data.reduce((sum, review) => sum + review.rating, 0);
